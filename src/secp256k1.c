@@ -18,6 +18,7 @@
 #include "eckey_impl.h"
 #include "hash_impl.h"
 #include "scratch_impl.h"
+#include "sha3_impl.h"
 
 #define ARG_CHECK(cond) do { \
     if (EXPECT(!(cond), 0)) { \

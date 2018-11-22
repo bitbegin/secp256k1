@@ -9,9 +9,7 @@ build_dll() {
 	make
 }
 
-git clone https://github.com/bitcoin-core/secp256k1.git
-
-cd secp256k1
+# make clean
 
 build_dll i686-w64-mingw32
 
