@@ -44,14 +44,15 @@ static const uint64_t RC[24] = \
 	REPEAT5(e; v += s;)
 
 /*** Keccak-f[1600] ***/
-static inline void keccakf(void* state) {
+static SECP256K1_INLINE void keccakf(void* state) {
 	uint64_t* a = (uint64_t*)state;
 	uint64_t b[5] = {0};
 	uint64_t t = 0;
 	uint8_t x, y;
+	int i;
 
-	for (int i = 0; i < 24; i++) {
-		// Theta
+	for (i = 0; i < 24; i++) {
+		/* Theta */
 		FOR5(x, 1,
 				b[x] = 0;
 				FOR5(y, 5,
@@ -59,21 +60,21 @@ static inline void keccakf(void* state) {
 		FOR5(x, 1,
 				FOR5(y, 5,
 						a[y + x] ^= b[(x + 4) % 5] ^ rol(b[(x + 1) % 5], 1); ))
-		// Rho and pi
+		/* Rho and pi */
 		t = a[1];
 		x = 0;
 		REPEAT24(b[0] = a[pi[x]];
 				a[pi[x]] = rol(t, rho[x]);
 				t = b[0];
 				x++; )
-		// Chi
+		/* Chi */
 		FOR5(y,
 				5,
 				FOR5(x, 1,
 						b[x] = a[y + x];)
 				FOR5(x, 1,
 				a[y + x] = b[x] ^ ((~b[(x + 1) % 5]) & b[(x + 2) % 5]); ))
-		// Iota
+		/* Iota */
 		a[0] ^= RC[i];
 	}
 }
@@ -84,27 +85,29 @@ static inline void keccakf(void* state) {
 
 #define _(S) do { S } while (0)
 #define FOR(i, ST, L, S)							\
-	_(for (size_t i = 0; i < L; i += ST) { S; })
+	_(for (i = 0; i < L; i += ST) { S; })
 #define mkapply_ds(NAME, S)						\
-	static inline void NAME(uint8_t* dst,			\
+	static SECP256K1_INLINE void NAME(uint8_t* dst,			\
 		const uint8_t* src,						\
 		size_t len) {								\
+		size_t i;									\
 		FOR(i, 1, len, S);							\
 	}
 #define mkapply_sd(NAME, S)						\
-	static inline void NAME(const uint8_t* src,	\
+	static SECP256K1_INLINE void NAME(const uint8_t* src,	\
 		uint8_t* dst,								\
 		size_t len) {								\
+		size_t i;									\
 		FOR(i, 1, len, S);							\
 	}
 
-mkapply_ds(xorin, dst[i] ^= src[i])  // xorin
-mkapply_sd(setout, dst[i] = src[i])  // setout
+mkapply_ds(xorin, dst[i] ^= src[i])  /* xorin */
+mkapply_sd(setout, dst[i] = src[i])  /* setout */
 
 #define P keccakf
 #define Plen 200
 
-// Fold P*F over the full blocks of an input.
+/* Fold P*F over the full blocks of an input. */
 #define foldP(I, L, F)								\
 	while (L >= rate) {							\
 		F(a, I, rate);								\
@@ -114,23 +117,23 @@ mkapply_sd(setout, dst[i] = src[i])  // setout
 	}
 
 /** The sponge-based hash construction. **/
-static inline int hash(uint8_t* out, size_t outlen,
+static SECP256K1_INLINE int hash(uint8_t* out, size_t outlen,
 		const uint8_t* in, size_t inlen,
 		size_t rate, uint8_t delim) {
+	uint8_t a[Plen] = {0};
 	if ((out == NULL) || ((in == NULL) && inlen != 0) || (rate >= Plen)) {
 		return -1;
 	}
-	uint8_t a[Plen] = {0};
-	// Absorb input.
+	/* Absorb input. */
 	foldP(in, inlen, xorin);
-	// Xor in the DS and pad frame.
+	/* Xor in the DS and pad frame. */
 	a[inlen] ^= delim;
 	a[rate - 1] ^= 0x80;
-	// Xor in the last block.
+	/* Xor in the last block. */
 	xorin(a, in, inlen);
-	// Apply P
+	/* Apply P */
 	P(a);
-	// Squeeze output.
+	/* Squeeze output. */
 	foldP(out, outlen, setout);
 	setout(a, out, outlen);
 	memset(a, 0, 200);
