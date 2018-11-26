@@ -12,9 +12,7 @@ build_dll() {
 # make clean
 build_dll x86_64-linux-gnu
 
-cp .libs/libsecp256k1.so ../
-cp .libs/libsecp256k1.so.0 ../
-cp .libs/libsecp256k1.so.0.0.0 ../
+cp .libs/libsecp256k1.so.0.0.0 ../libsecp256k1.so
 
 # ./autogen.sh
 # echo "LDFLAGS = -no-undefined" >> Makefile.am
