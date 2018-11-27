@@ -12,7 +12,7 @@ build_dll() {
 # make clean
 build_dll i686-apple-darwin17.6.0
 
-cp .libs/libsecp256k1.so ../libsecp256k1.dylib
+cp .libs/libsecp256k1.0.dylib ../libsecp256k1.dylib
 
 # ./autogen.sh
 # echo "LDFLAGS = -no-undefined" >> Makefile.am
